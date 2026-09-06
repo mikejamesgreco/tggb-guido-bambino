@@ -16,11 +16,11 @@ G-Bert while you clear the pyramid one cube at a time.
 
 > **Same cubes. Different dude.**
 
-![TGGB - G-Bert screenshot](screenshot.jpeg)
+![TGGB G-Bert screenshot](screenshot.jpeg)
 
 ## Play TGGB
 
-**[▶ Play TGGB - G-Bert in your browser](https://mikejamesgreco.github.io/tggb-g-bert/)**
+**[▶ Play TGGB G-Bert in your browser](https://mikejamesgreco.github.io/tggb-g-bert/)**
 
 No installation is required. The GitHub Pages version runs TGGB directly
 in your browser, just like opening the standalone `tggb-g-bert.html`
@@ -141,6 +141,6 @@ See the repository `LICENSE` file for details.
 
 **Michael J. Greco**
 
-TGGB - G-Bert --- **The Greco G-Bert**
+TGGB G-Bert --- **The Greco G-Bert**
 
 © mikejamesgreco.me LLC. All rights reserved.
