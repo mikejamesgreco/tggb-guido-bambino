@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TGGB Guido-Bambino</title>
+<meta name="description" content="TGGB - The Greco Guido Bambino. A single-file, local-first isometric arcade hopping game with an optional locally loaded player face.">
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f4f6f8;--panel:#fff;--text:#1f2937;--muted:#64748b;--line:#d9e1ea;--blue:#2563eb;--blue2:#1d4ed8;--soft:#f8fafc;--danger:#b91c1c}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+body{padding:18px;overflow-y:auto}.app{max-width:1450px;margin:0 auto;min-height:calc(100vh - 36px);display:flex;flex-direction:column;gap:14px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 14px;background:linear-gradient(135deg,#ffffff,#eef5ff);border:1px solid var(--line);border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.05)}
+.brand{display:flex;flex-direction:column;gap:2px}.brand strong{font-size:30px;color:#12345b;line-height:1.02;letter-spacing:-.03em}.brand small{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#64748b;animation:blink 2.2s ease-in-out infinite}.brand .docs-link{font-size:9px;font-weight:700;color:#64748b;text-decoration:none;margin-top:1px}.brand .docs-link:hover{color:var(--blue);text-decoration:underline}@keyframes blink{0%,100%{opacity:.28}50%{opacity:.95}}
+.controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap}.group{display:flex;align-items:center;gap:6px;padding:5px 6px;background:#fff;border:1px solid var(--line);border-radius:8px}.group label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:#64748b}
+button,.filebtn{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:7px;padding:8px 10px;font:700 12px Arial,Helvetica,sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}button:hover,.filebtn:hover{border-color:#94a3b8}button.primary{background:var(--blue);border-color:var(--blue);color:#fff}button.primary:hover{background:var(--blue2)}button:disabled{opacity:.45;cursor:not-allowed}input[type=file]{display:none}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}.gamecard,.sidecard{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 15px rgba(15,23,42,.04)}.gamecard{padding:10px}.hud{display:none}.stat{background:var(--soft);border:1px solid #e2e8f0;border-radius:8px;padding:7px 8px}.stat b{display:block;font-size:15px}.stat span{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;font-weight:800}
+.canvas-wrap{position:relative}canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#10002b;border-radius:8px;border:1px solid #22103d;touch-action:none}.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}.message{display:none;max-width:520px;text-align:center;background:rgba(22,9,40,.88);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:18px 22px}.message.show{display:block}.message h2{margin:0 0 8px;font-size:26px}.message p{margin:4px 0;color:#ddd6fe;font-size:13px}
+.side{display:flex;flex-direction:column;gap:14px}.sidecard{padding:14px}.sidecard h3{margin:0 0 10px;font-size:15px}.sidecard p,.hint{font-size:12px;color:#64748b;line-height:1.45}.legend{display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:11px;color:#64748b}.legend div{padding:7px;background:var(--soft);border-radius:7px;border:1px solid #e2e8f0}
+.facewrap{display:flex;gap:10px;align-items:center}.face{width:82px;aspect-ratio:1;background:#eef2f7;border:1px solid #dbe2ea;border-radius:50%;overflow:hidden;flex:0 0 auto}.face canvas{display:block;width:100%;height:100%;aspect-ratio:1;border:0;border-radius:0;background:transparent}.empty-face{display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;text-align:center;padding:8px}.setting{margin:11px 0}.setting-row{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;font-weight:700}input[type=range]{width:100%}
+.cropbox{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0}.cropbox.show{display:block}.crop-editor{position:relative;width:100%;aspect-ratio:1;background:#0f172a;border:1px solid #cbd5e1;border-radius:9px;overflow:hidden;touch-action:none;cursor:grab}.crop-editor:active{cursor:grabbing}.crop-editor canvas{width:100%;height:100%;aspect-ratio:1;border:0;border-radius:0;cursor:inherit;background:#0f172a}.crop-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.crop-actions button{flex:1;justify-content:center}
+.touchpad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,46px);gap:4px;justify-content:center;margin-top:10px}.touchpad button{justify-content:center;padding:0;font-size:20px}.touchpad .nw{grid-column:1;grid-row:1}.touchpad .ne{grid-column:3;grid-row:1}.touchpad .sw{grid-column:1;grid-row:3}.touchpad .se{grid-column:3;grid-row:3}
+.helpback{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.helpback.show{display:flex}.modal{width:min(760px,96vw);max-height:88vh;background:#fff;border-radius:12px;border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}.modalhead{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:800}.modalbody{padding:16px;overflow:auto;font-size:13px;color:#475569;line-height:1.5}.modalbody h3{color:#1f2937;margin:18px 0 6px}.modalactions{padding:10px 14px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+footer{margin-top:auto;padding:10px 2px 2px;color:#64748b;font-size:10px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}footer a{color:#64748b;text-decoration:none;font-weight:700}footer a:hover{color:var(--blue);text-decoration:underline}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr;display:grid}.hud{grid-template-columns:repeat(3,1fr)}}@media(max-width:600px){body{padding:8px}.side{display:flex}.hud{grid-template-columns:repeat(2,1fr)}.brand strong{font-size:19px}.controls{width:100%;flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar"><div class="brand"><strong>TGGB Guido-Bambino</strong><small>The Greco Guido Bambino</small><a class="docs-link" href="https://github.com/mikejamesgreco/tggb-guido-bambino#readme" target="_blank" rel="noopener noreferrer">GitHub / Docs ↗</a></div><div class="controls"><div class="group"><label>Game</label><button class="primary" id="startBtn">Start Game</button><button id="pauseBtn">Pause</button></div><div class="group"><label>Face</label><label class="filebtn" for="faceInput">Load Image</label><input id="faceInput" type="file" accept="image/*"></div><div class="group"><button id="helpBtn">Help</button></div></div></header>
+<main class="layout"><section class="gamecard"><div class="hud"><div class="stat"><span>Score</span><b id="score">0</b></div><div class="stat"><span>High Score</span><b id="highScore">0</b></div><div class="stat"><span>Level</span><b id="level">1</b></div><div class="stat"><span>Lives</span><b id="lives">3</b></div><div class="stat"><span>Cubes Left</span><b id="left">0</b></div></div><div class="canvas-wrap"><canvas id="game" width="1280" height="720" aria-label="TGGB Guido-Bambino game canvas"></canvas><div class="overlay"><div class="message show" id="message"><h2>TGGB Guido-Bambino</h2><p>Hop across the circular cube arena and light every cube.</p><p>Load a face to turn anyone into Guido-Bambino.</p></div></div></div></section>
+<aside class="side"><section class="sidecard"><h3>Make Your Guido-Bambino</h3><p>The selected image stays local to this browser session. Nothing is uploaded.</p><div class="facewrap"><div class="face" id="facePreview"><div class="empty-face">Default<br>Guido-Bambino</div></div><div><b style="font-size:12px">Big hair. Big nose. Tiny shoes.</b><p style="margin:4px 0 0">Load and crop one face for the player character.</p></div></div><div class="cropbox" id="cropBox"><div class="crop-editor"><canvas id="cropCanvas" width="480" height="480"></canvas></div><div class="setting"><div class="setting-row"><span>Zoom</span><span id="cropZoomVal">100%</span></div><input type="range" id="cropZoom" min="100" max="400" value="100"></div><div class="crop-actions"><button id="cropReset">Reset</button><button class="primary" id="cropDone">Done</button></div></div><div class="setting"><div class="setting-row"><span>Character Size</span><span id="charSizeVal">100%</span></div><input type="range" id="charSize" min="80" max="135" value="100"></div></section>
+<section class="sidecard"><h3>How to Play</h3><div class="legend"><div><b>↖ / Q</b><br>Hop up-left</div><div><b>↗ / E</b><br>Hop up-right</div><div><b>↙ / A</b><br>Hop down-left</div><div><b>↘ / D</b><br>Hop down-right</div></div><div class="touchpad"><button class="nw" data-dir="nw">↖</button><button class="ne" data-dir="ne">↗</button><button class="sw" data-dir="sw">↙</button><button class="se" data-dir="se">↘</button></div><p class="hint">Arrow keys also work: Left = ↖, Up = ↗, Down = ↙, Right = ↘. Z and C remain aliases for ↙ and ↘. Light every cube in the arena to clear the level. Avoid the bouncing Rival Guidos.</p></section>
+</aside></main>
+<footer><span>© <span id="year"></span> mikejamesgreco.me LLC. All rights reserved.</span><span><a href="https://github.com/mikejamesgreco/tggb-guido-bambino#readme" target="_blank" rel="noopener noreferrer">GitHub / README ↗</a></span></footer></div>
+<div class="helpback" id="helpBack"><div class="modal"><div class="modalhead">TGGB Help</div><div class="modalbody"><h3>Goal</h3>Hop across the floating circular cube arena. Every safe landing lights that cube. Light the whole arena to advance to the next level.<h3>Movement</h3>Guido-Bambino moves only diagonally across adjacent cubes. Use the four diagonal buttons, Q/E/A/D, or the arrow keys. Z/C are also accepted as alternate down-left/down-right keys. Each move is a committed hop, so timing matters.<h3>Rival Guidos</h3>Rival Guidos are colorful little wiseguys who enter around the outer edge and hop across the arena. Each one gets a random look, hair, shirt, shades or mustache, and plenty of gold. Touching one costs a life — and briefly freezes the action while you get a visible and spoken “Forget about it!” They become more frequent as the levels increase. Every so often, an old-school black sedan cruises past, stops the action long enough to ask its very important pizza question, then the game resumes.<h3>Falling</h3>A hop outside the circular arena sends Guido-Bambino tumbling into space and costs a life. After a short pause, the character returns to the top if any lives remain.<h3>Face Image</h3>Load one local image, crop the face, and TGGB draws it onto the player character. The image is decoded locally and is not uploaded or stored.<h3>Privacy</h3>The loaded image exists only for this page session. Reloading or closing the page removes it.</div><div class="modalactions"><button id="closeHelp">Close</button></div></div></div>
+<script>
+(()=>{'use strict';
+const APP_VERSION='v0016';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+document.title=`TGGB Guido-Bambino ${APP_VERSION}`;
+const ui=Object.fromEntries(['score','highScore','level','lives','left','message','startBtn','pauseBtn','faceInput','facePreview','cropBox','cropCanvas','cropZoom','cropZoomVal','cropReset','cropDone','charSize','charSizeVal','helpBack','helpBtn','closeHelp'].map(id=>[id,document.getElementById(id)]));
+document.getElementById('year').textContent=new Date().getFullYear();
+const ARENA_RADIUS=3,TILE_W=112,TILE_H=54,TILE_DEPTH=38,CENTER_X=W/2,CENTER_Y=360;
+let audioCtx=null;function tone(freq=440,dur=.06,type='sine',gain=.03){try{audioCtx||=new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.value=gain;o.connect(g);g.connect(audioCtx.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur)}catch{}}
+function speakWiseguy(text,onDone){
+  let finished=false,timer=0;
+  const done=()=>{if(finished)return;finished=true;if(timer)clearTimeout(timer);if(typeof onDone==='function')onDone()};
+  try{
+    if(!('speechSynthesis' in window)){done();return}
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text),voices=window.speechSynthesis.getVoices(),english=voices.filter(v=>/^en[-_]/i.test(v.lang||''));
+    const preferred=english.find(v=>/(aaron|alex|daniel|fred|guy|reed|ralph|bruce|male)/i.test(v.name||''))||english[0]||voices[0];
+    if(preferred)u.voice=preferred;
+    u.rate=.78;u.pitch=.66;u.volume=1;
+    u.onend=done;u.onerror=done;
+    timer=setTimeout(done,Math.max(1800,text.length*115));
+    window.speechSynthesis.speak(u);
+  }catch{done()}
+}
+let state,face=null,selectedCrop=null,cropDrag=null,last=performance.now(),raf=0;
+function tilePos(q,r){return{x:CENTER_X+(q-r)*(TILE_W/2),y:CENTER_Y+(q+r)*(TILE_H/2)}}
+function inArena(q,r){return Math.max(Math.abs(q),Math.abs(r),Math.abs(q+r))<=ARENA_RADIUS}
+function makeTiles(){const a=[];for(let q=-ARENA_RADIUS;q<=ARENA_RADIUS;q++)for(let r=-ARENA_RADIUS;r<=ARENA_RADIUS;r++)if(inArena(q,r))a.push({q,r,lit:false});return a}
+function getTile(q,r){return state.tiles.find(t=>t.q===q&&t.r===r)}
+function centerPlayer(){const p=tilePos(0,0);return{q:0,r:0,x:p.x,y:p.y,from:null,to:null,t:1,falling:false,fallT:0,dead:false}}
+function resetState(){state={running:false,paused:false,cinematic:false,score:0,highScore:Number(localStorage.getItem('tggb.highScore.v1')||0),level:1,lives:3,tiles:makeTiles(),player:centerPlayer(),enemies:[],enemyTimer:1.8,invuln:0,levelDone:false,levelDelay:0,taunt:null,driveBy:{active:false,x:-220,y:H-74,dir:1,speed:330,timer:9+Math.random()*10,said:false,speaking:false}};updateHud()}
+resetState();
+function updateHud(){const left=state.tiles.filter(t=>!t.lit).length;ui.score.textContent=state.score.toLocaleString();ui.highScore.textContent=state.highScore.toLocaleString();ui.level.textContent=state.level;ui.lives.textContent=state.lives;ui.left.textContent=left;ui.pauseBtn.textContent=state.paused?'Resume':'Pause'}
+function startGame(){cancelAnimationFrame(raf);resetState();state.running=true;landOn(0,0,false);ui.message.classList.remove('show');last=performance.now();raf=requestAnimationFrame(loop);tone(420,.08,'square',.02)}
+function landOn(q,r,score=true){const t=getTile(q,r);if(t&&!t.lit){t.lit=true;if(score){state.score+=100;state.score+=state.level*10;tone(520,.04,'square',.018)}}updateHud();if(state.tiles.every(t=>t.lit)&&state.running){state.levelDone=true;state.levelDelay=1.4;state.score+=1000*state.level;tone(760,.18,'triangle',.025)}}
+const DIRS={nw:[-1,0],ne:[0,-1],sw:[0,1],se:[1,0]};
+function move(dir){if(!state.running||state.paused||state.levelDone)return;const p=state.player;if(p.t<1||p.falling||p.dead)return;const d=DIRS[dir],nq=p.q+d[0],nr=p.r+d[1];if(!inArena(nq,nr)){startFall();return}const a=tilePos(p.q,p.r),b=tilePos(nq,nr);p.from={x:a.x,y:a.y};p.to={x:b.x,y:b.y};p.q=nq;p.r=nr;p.t=0;tone(320,.035,'square',.012)}
+function startFall(){const p=state.player;p.falling=true;p.fallT=0;p.vx=(Math.random()-.5)*160;p.vy=-110;tone(120,.18,'sawtooth',.025)}
+function loseLife(){if(!state.running)return;state.lives--;updateHud();if(state.lives<=0){gameOver();return}state.player.dead=true;setTimeout(()=>{if(!state.running)return;state.player=centerPlayer();state.invuln=1.5;landOn(0,0,false)},700)}
+function gameOver(){state.running=false;if(state.score>state.highScore){state.highScore=state.score;localStorage.setItem('tggb.highScore.v1',String(state.score))}updateHud();ui.message.innerHTML=`<h2>GUIDO-BAMBINO HAS LEFT THE ARENA</h2><p>Final score: <b>${state.score.toLocaleString()}</b> · Level ${state.level}</p><p>Press Start Game to hop again.</p>`;ui.message.classList.add('show');tone(90,.5,'sawtooth',.035)}
+function nextLevel(){state.level++;state.tiles=makeTiles();state.enemies=[];state.enemyTimer=Math.max(.65,1.8-state.level*.1);state.levelDone=false;state.player=centerPlayer();landOn(0,0,false);updateHud()}
+function edgeTiles(){return state.tiles.filter(t=>Math.max(Math.abs(t.q),Math.abs(t.r),Math.abs(t.q+t.r))===ARENA_RADIUS)}
+function spawnEnemy(){const shirts=['#ef476f','#8b5cf6','#f59e0b','#22c55e','#2dd4bf','#f97316'],skins=['#f0b27a','#d99a6c','#f3c49b','#c98355'],hairs=['#19130f','#322016','#4a2c18'],edges=edgeTiles(),t=edges[(Math.random()*edges.length)|0],p=tilePos(t.q,t.r);state.enemies.push({q:t.q,r:t.r,x:p.x,y:p.y,from:null,to:null,t:1,wait:.45+Math.random()*.35,shirt:shirts[(Math.random()*shirts.length)|0],skin:skins[(Math.random()*skins.length)|0],hair:hairs[(Math.random()*hairs.length)|0],style:(Math.random()*3)|0,mustache:Math.random()<.48,shades:Math.random()<.38,chains:1+((Math.random()*2)|0)})}
+function enemyStep(e){const choices=Object.values(DIRS).map(d=>({q:e.q+d[0],r:e.r+d[1]})).filter(n=>inArena(n.q,n.r));if(!choices.length){e.dead=true;return}choices.sort((a,b)=>(Math.abs(a.q)+Math.abs(a.r)+Math.abs(a.q+a.r))-(Math.abs(b.q)+Math.abs(b.r)+Math.abs(b.q+b.r)));const pool=Math.random()<.72?choices.slice(0,Math.min(2,choices.length)):choices;const n=pool[(Math.random()*pool.length)|0],a=tilePos(e.q,e.r),b=tilePos(n.q,n.r);e.from={x:a.x,y:a.y};e.to={x:b.x,y:b.y};e.q=n.q;e.r=n.r;e.t=0;e.wait=.3+Math.random()*.35}
+function startDriveBy(){const d=state.driveBy;d.active=true;d.dir=Math.random()<.5?1:-1;d.x=d.dir===1?-210:W+210;d.y=H-76;d.speed=300+Math.random()*90;d.said=false;d.speaking=false}
+function updateDriveBy(dt){
+  const d=state.driveBy;if(!d)return;
+  if(!d.active){d.timer-=dt;if(d.timer<=0&&!state.cinematic)startDriveBy();return}
+  // Keep the car moving gently during its line so the cutaway feels alive,
+  // while the rest of the game remains paused by state.cinematic.
+  d.x+=d.dir*d.speed*(d.speaking?.12:1)*dt;
+  const trigger=d.dir===1?d.x>W*.24:d.x<W*.76;
+  if(trigger&&!d.said&&!state.cinematic){
+    d.said=true;d.speaking=true;state.cinematic=true;
+    speakWiseguy('Did anyone order a pizza?',()=>{if(!state)return;d.speaking=false;state.cinematic=false});
+  }
+  if((d.dir===1&&d.x>W+230)||(d.dir===-1&&d.x<-230)){d.active=false;d.timer=22+Math.random()*24}
+}
+function update(dt){if(!state.running||state.paused)return;updateDriveBy(dt);if(state.cinematic)return;if(state.invuln>0)state.invuln-=dt;if(state.taunt){state.taunt.time-=dt;if(state.taunt.time<=0)state.taunt=null;}const p=state.player;if(p.falling){p.fallT+=dt;p.x+=p.vx*dt;p.vy+=430*dt;p.y+=p.vy*dt;if(p.y>H+80){p.falling=false;loseLife()}return}if(!p.dead&&p.t<1){p.t=Math.min(1,p.t+dt/0.23);const q=p.t,arc=Math.sin(q*Math.PI)*76;p.x=p.from.x+(p.to.x-p.from.x)*q;p.y=p.from.y+(p.to.y-p.from.y)*q-arc;if(p.t>=1){landOn(p.q,p.r,true);checkCollisions()}}
+state.enemyTimer-=dt;if(state.enemyTimer<=0&&!state.levelDone){spawnEnemy();state.enemyTimer=Math.max(.55,2.25-state.level*.12)+Math.random()*.7}
+for(const e of state.enemies){if(e.t<1){e.t=Math.min(1,e.t+dt/(.36-Math.min(.12,state.level*.012)));const q=e.t,arc=Math.sin(q*Math.PI)*48;e.x=e.from.x+(e.to.x-e.from.x)*q;e.y=e.from.y+(e.to.y-e.from.y)*q-arc;if(e.t>=1)checkCollisions()}else{e.wait-=dt;if(e.wait<=0)enemyStep(e)}}
+state.enemies=state.enemies.filter(e=>!e.dead);if(state.levelDone){state.levelDelay-=dt;if(state.levelDelay<=0)nextLevel()}if(state.score>state.highScore){state.highScore=state.score;localStorage.setItem('tggb.highScore.v1',String(state.score))}updateHud()}
+function checkCollisions(){
+  if(state.invuln>0||state.player.dead||state.player.falling||state.cinematic)return;
+  for(const e of state.enemies){
+    if(e.t>=1&&e.q===state.player.q&&e.r===state.player.r){
+      tone(110,.16,'square',.025);
+      state.player.dead=true;state.cinematic=true;
+      state.taunt={text:'Forget about it!',x:e.x,y:e.y-72,time:999};
+      speakWiseguy('Forget about it!',()=>{if(!state||!state.running)return;state.taunt=null;state.cinematic=false;loseLife()});
+      return;
+    }
+  }
+}
+function poly(points,fill,stroke){ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.3;ctx.stroke()}}
+function drawTile(t){const p=tilePos(t.q,t.r),x=p.x,y=p.y,w=TILE_W/2,h=TILE_H/2,d=TILE_DEPTH;const top=t.lit?'#ffe45e':'#28b8f5',left=t.lit?'#e89a08':'#1353a8',right=t.lit?'#ff7a18':'#0c3984';poly([[x,y-h],[x+w,y],[x,y+h],[x-w,y]],top,'rgba(255,255,255,.72)');poly([[x-w,y],[x,y+h],[x,y+h+d],[x-w,y+d]],left);poly([[x+w,y],[x,y+h],[x,y+h+d],[x+w,y+d]],right)}
+function drawBackground(){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#02081f');g.addColorStop(.58,'#071b55');g.addColorStop(1,'#07133b');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  for(let i=0;i<105;i++){const x=(i*193+41)%W,y=(i*79+17)%460;ctx.globalAlpha=.25+(i%6)*.11;ctx.fillStyle=i%9===0?'#9ee8ff':'#fff';ctx.beginPath();ctx.arc(x,y,i%8===0?1.6:1,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+  ctx.fillStyle='#030b24';let x=0;while(x<W){const bw=28+((x*7)%38),bh=28+((x*13)%78);ctx.fillRect(x,H-110-bh,bw,bh+110);x+=bw+7}
+}
+function drawFaceCircle(x,y,r){
+  ctx.save();
+
+  // Default Guido-Bambino gets a slightly longer, less circular cartoon head.
+  // Uploaded faces retain the circular crop treatment.
+  if(face){
+    // Big 1960s greaser / Fonzie-inspired pompadour around the uploaded face.
+    ctx.fillStyle='#24120d';ctx.strokeStyle='#100704';ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(x-r*.88,y-r*.42);
+    ctx.bezierCurveTo(x-r*1.00,y-r*.98,x-r*.48,y-r*1.26,x-r*.02,y-r*1.14);
+    ctx.bezierCurveTo(x+r*.22,y-r*1.38,x+r*.78,y-r*1.16,x+r*.92,y-r*.67);
+    ctx.bezierCurveTo(x+r*1.00,y-r*.40,x+r*.85,y-r*.20,x+r*.67,y-r*.12);
+    ctx.bezierCurveTo(x+r*.30,y-r*.46,x-r*.20,y-r*.50,x-r*.88,y-r*.42);
+    ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#6b3a22';ctx.lineWidth=2;
+    for(let i=-3;i<=3;i++){
+      ctx.beginPath();
+      ctx.arc(x+i*r*.12,y-r*.68-Math.abs(i)*1.0,r*.50,-2.62,-.48);
+      ctx.stroke();
+    }
+    const crop=getFaceCrop();ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();ctx.drawImage(face.img,crop.sx,crop.sy,crop.s,crop.s,x-r,y-r,r*2,r*2);ctx.restore();ctx.strokeStyle='#fff7ed';ctx.lineWidth=2.3;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  const rx=r*.88, ry=r*1.08;
+
+  // Ears first so the face sits over them.
+  ctx.fillStyle='#f0a35f';
+  ctx.beginPath();ctx.ellipse(x-rx*.96,y+ry*.03,rx*.19,ry*.20,-.08,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x+rx*.96,y+ry*.03,rx*.19,ry*.20,.08,0,Math.PI*2);ctx.fill();
+
+  // Longer oval head instead of the previous round ball shape.
+  const skin=ctx.createLinearGradient(x-rx,y-ry,x+rx,y+ry);
+  skin.addColorStop(0,'#ffd099');skin.addColorStop(.55,'#f2ad68');skin.addColorStop(1,'#d9864d');
+  ctx.fillStyle=skin;ctx.strokeStyle='#9b542f';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.ellipse(x,y+ry*.05,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+  // Bigger, higher pompadour with swept-back side wings.
+  ctx.fillStyle='#25130e';ctx.strokeStyle='#100704';ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(x-rx*.91,y-ry*.50);
+  ctx.bezierCurveTo(x-rx*1.08,y-ry*.89,x-rx*.72,y-ry*1.16,x-rx*.33,y-ry*1.10);
+  ctx.bezierCurveTo(x-rx*.18,y-ry*1.38,x+rx*.25,y-ry*1.43,x+rx*.43,y-ry*1.11);
+  ctx.bezierCurveTo(x+rx*.83,y-ry*1.20,x+rx*1.06,y-ry*.88,x+rx*.93,y-ry*.46);
+  ctx.bezierCurveTo(x+rx*.63,y-ry*.66,x+rx*.31,y-ry*.71,x+rx*.08,y-ry*.62);
+  ctx.bezierCurveTo(x-rx*.22,y-ry*.77,x-rx*.58,y-ry*.70,x-rx*.91,y-ry*.50);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  // Pompadour comb lines / shine.
+  ctx.strokeStyle='#754229';ctx.lineWidth=2;
+  for(let i=-3;i<=3;i++){
+    const xx=x+i*rx*.13;
+    ctx.beginPath();ctx.arc(xx,y-ry*.76-Math.abs(i)*.8,rx*.46,-2.58,-.58);ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=2.4;
+  ctx.beginPath();ctx.arc(x-rx*.08,y-ry*.92,rx*.38,-2.6,-.85);ctx.stroke();
+
+  // Brows.
+  ctx.strokeStyle='#382018';ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(x-rx*.54,y-ry*.30);ctx.quadraticCurveTo(x-rx*.31,y-ry*.42,x-rx*.09,y-ry*.28);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x+rx*.10,y-ry*.27);ctx.quadraticCurveTo(x+rx*.34,y-ry*.39,x+rx*.57,y-ry*.23);ctx.stroke();
+
+  // Eyes, with a little extra separation from the nose.
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.ellipse(x-rx*.31,y-ry*.10,rx*.15,ry*.15,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(x+rx*.31,y-ry*.09,rx*.15,ry*.15,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#24130e';
+  ctx.beginPath();ctx.arc(x-rx*.28,y-ry*.07,rx*.055,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(x+rx*.34,y-ry*.06,rx*.055,0,Math.PI*2);ctx.fill();
+
+  // Still a proudly oversized nose, but lower and centered so neither eye is covered.
+  ctx.fillStyle='#f6b36f';ctx.strokeStyle='#a9532e';ctx.lineWidth=1.6;
+  ctx.beginPath();
+  ctx.moveTo(x-rx*.02,y-ry*.02);
+  ctx.bezierCurveTo(x+rx*.15,y+ry*.02,x+rx*.42,y+ry*.12,x+rx*.50,y+ry*.27);
+  ctx.bezierCurveTo(x+rx*.57,y+ry*.40,x+rx*.44,y+ry*.51,x+rx*.25,y+ry*.50);
+  ctx.bezierCurveTo(x+rx*.08,y+ry*.49,x-rx*.08,y+ry*.40,x-rx*.12,y+ry*.29);
+  ctx.bezierCurveTo(x-rx*.14,y+ry*.20,x-rx*.09,y+ry*.08,x-rx*.02,y-ry*.02);
+  ctx.closePath();ctx.fill();ctx.stroke();
+  // Nose highlight / nostril.
+  ctx.fillStyle='rgba(255,236,205,.34)';ctx.beginPath();ctx.ellipse(x+rx*.23,y+ry*.20,rx*.12,ry*.08,-.3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#8a4429';ctx.beginPath();ctx.ellipse(x+rx*.35,y+ry*.38,rx*.055,ry*.035,0,0,Math.PI*2);ctx.fill();
+
+  // Cheek, grin and small chin line.
+  ctx.fillStyle='rgba(218,111,62,.24)';ctx.beginPath();ctx.ellipse(x-rx*.38,y+ry*.28,rx*.22,ry*.11,-.18,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#71351f';ctx.lineWidth=2.2;
+  ctx.beginPath();ctx.arc(x+rx*.02,y+ry*.40,rx*.38,.10*Math.PI,.84*Math.PI);ctx.stroke();
+  ctx.beginPath();ctx.arc(x,y+ry*.58,rx*.22,.14*Math.PI,.86*Math.PI);ctx.stroke();
+
+  ctx.restore();
+}
+function drawPlayer(){
+  const p=state.player;if(p.dead)return;const s=Number(ui.charSize.value)/100,alpha=state.invuln>0&&Math.floor(state.invuln*10)%2===0?.35:1;ctx.save();ctx.globalAlpha=alpha;ctx.translate(p.x,p.y);if(p.falling)ctx.rotate(p.fallT*5);const hop=p.falling?0:Math.sin(Math.min(1,p.t)*Math.PI),squash=p.t>=1?1:1-hop*.055;ctx.translate(0,-hop*7);ctx.scale(1+(1-squash)*.28,squash);
+  ctx.fillStyle='rgba(3,8,31,.28)';ctx.beginPath();ctx.ellipse(0,3*s,24*s,7*s,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#d88948';ctx.lineWidth=5*s;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-9*s,-22*s);ctx.lineTo(-9*s,-4*s);ctx.moveTo(9*s,-22*s);ctx.lineTo(9*s,-4*s);ctx.stroke();for(const side of [-1,1]){const fx=side*10*s;ctx.fillStyle='#f8fafc';ctx.beginPath();ctx.ellipse(fx,0,7*s,3.6*s,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#334155';ctx.lineWidth=1.2*s;ctx.stroke();ctx.fillStyle='#334155';ctx.fillRect(fx-6*s,1*s,12*s,1.8*s)}
+  const shirt=ctx.createLinearGradient(0,-56*s,0,-18*s);shirt.addColorStop(0,'#a855f7');shirt.addColorStop(1,'#6d28d9');ctx.fillStyle=shirt;ctx.strokeStyle='#451a70';ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(-17*s,-54*s);ctx.quadraticCurveTo(-22*s,-40*s,-15*s,-20*s);ctx.quadraticCurveTo(0,-15*s,15*s,-20*s);ctx.quadraticCurveTo(22*s,-40*s,17*s,-54*s);ctx.lineTo(8*s,-58*s);ctx.quadraticCurveTo(0,-51*s,-8*s,-58*s);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#f3e8ff';ctx.lineWidth=2.4*s;ctx.beginPath();ctx.arc(0,-57*s,8*s,.12*Math.PI,.88*Math.PI);ctx.stroke();
+  // Guido's gloriously unnecessary gold chains.
+  ctx.strokeStyle='#facc15';ctx.lineCap='round';
+  ctx.lineWidth=2.2*s;ctx.beginPath();ctx.arc(0,-53*s,12*s,.12*Math.PI,.88*Math.PI);ctx.stroke();
+  ctx.strokeStyle='#fde047';ctx.lineWidth=1.5*s;ctx.beginPath();ctx.arc(0,-51*s,15*s,.13*Math.PI,.87*Math.PI);ctx.stroke();
+  ctx.fillStyle='#facc15';ctx.strokeStyle='#a16207';ctx.lineWidth=.9*s;ctx.beginPath();ctx.arc(0,-39*s,4.4*s,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#fff7ae';ctx.font=`900 ${5.3*s}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('G',0,-39*s+.3*s);
+  for(const side of [-1,1]){ctx.strokeStyle='#d88948';ctx.lineWidth=6*s;ctx.beginPath();ctx.moveTo(side*18*s,-49*s);ctx.quadraticCurveTo(side*28*s,-42*s,side*29*s,-29*s);ctx.stroke();ctx.fillStyle='#e89a55';ctx.beginPath();ctx.arc(side*23*s,-46*s,6*s,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(side*30*s,-27*s,4.5*s,0,Math.PI*2);ctx.fill()}ctx.fillStyle='#d88948';ctx.fillRect(-6*s,-64*s,12*s,8*s);drawFaceCircle(0,-82*s,26*s);ctx.restore();
+}
+function drawEnemy(e){
+ctx.save();ctx.translate(e.x,e.y-41);
+// compact wiseguy body
+ctx.fillStyle=e.shirt||'#ef476f';ctx.beginPath();ctx.roundRect(-15,8,30,25,8);ctx.fill();
+// tiny legs and shoes
+ctx.strokeStyle='#1b1830';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-7,30);ctx.lineTo(-9,40);ctx.moveTo(7,30);ctx.lineTo(9,40);ctx.stroke();ctx.fillStyle='#f7f4ea';ctx.beginPath();ctx.ellipse(-11,41,7,3,0,0,Math.PI*2);ctx.ellipse(11,41,7,3,0,0,Math.PI*2);ctx.fill();
+// neck/head
+ctx.fillStyle=e.skin||'#e7aa78';ctx.fillRect(-5,3,10,10);ctx.beginPath();ctx.ellipse(0,-6,17,19,0,0,Math.PI*2);ctx.fill();
+// ears
+ctx.beginPath();ctx.arc(-17,-5,4,0,Math.PI*2);ctx.arc(17,-5,4,0,Math.PI*2);ctx.fill();
+// random pompadour / slick hair silhouette
+ctx.fillStyle=e.hair||'#241812';
+ctx.beginPath();
+if(e.style===0){ctx.moveTo(-15,-18);ctx.quadraticCurveTo(-5,-32,5,-27);ctx.quadraticCurveTo(18,-31,17,-14);ctx.quadraticCurveTo(4,-20,-15,-18)}
+else if(e.style===1){ctx.moveTo(-16,-17);ctx.quadraticCurveTo(-8,-27,2,-24);ctx.quadraticCurveTo(13,-30,17,-17);ctx.lineTo(12,-10);ctx.quadraticCurveTo(0,-16,-16,-17)}
+else{ctx.moveTo(-16,-15);ctx.quadraticCurveTo(-3,-30,12,-23);ctx.lineTo(18,-14);ctx.quadraticCurveTo(2,-18,-16,-15)}
+ctx.closePath();ctx.fill();
+// nose
+ctx.fillStyle=e.skin||'#e7aa78';ctx.beginPath();ctx.ellipse(3,-2,7,5,-.08,0,Math.PI*2);ctx.fill();
+// eyes / optional shades
+if(e.shades){ctx.fillStyle='#111';ctx.fillRect(-13,-10,11,6);ctx.fillRect(3,-10,11,6);ctx.fillRect(-2,-8,5,2)}else{ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-6,-8,4,0,Math.PI*2);ctx.arc(7,-8,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#151515';ctx.beginPath();ctx.arc(-5,-8,1.8,0,Math.PI*2);ctx.arc(8,-8,1.8,0,Math.PI*2);ctx.fill()}
+// eyebrow attitude
+ctx.strokeStyle='#2b1b12';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-11,-14);ctx.lineTo(-3,-12);ctx.moveTo(11,-14);ctx.lineTo(4,-12);ctx.stroke();
+// mustache or smirk
+ctx.strokeStyle='#1e1510';ctx.lineWidth=2;ctx.beginPath();if(e.mustache){ctx.moveTo(-5,5);ctx.quadraticCurveTo(0,1,5,5);ctx.moveTo(0,3);ctx.quadraticCurveTo(5,1,8,4)}else{ctx.moveTo(-4,5);ctx.quadraticCurveTo(2,8,8,4)}ctx.stroke();
+// gold chains
+ctx.strokeStyle='#f5c542';ctx.lineWidth=2;for(let i=0;i<(e.chains||1);i++){ctx.beginPath();ctx.arc(0,13+i*3,8+i*2,.15,Math.PI-.15);ctx.stroke()}ctx.fillStyle='#f5c542';ctx.beginPath();ctx.arc(0,23+(e.chains||1)*2,2.5,0,Math.PI*2);ctx.fill();
+ctx.restore()}
+function drawTaunt(){if(!state.taunt)return;const t=state.taunt;ctx.save();ctx.font='900 17px Arial';const pad=10,w=ctx.measureText(t.text).width+pad*2,h=34,x=Math.max(8,Math.min(W-w-8,t.x-w/2)),y=Math.max(82,t.y-h);ctx.fillStyle='rgba(255,255,255,.97)';ctx.strokeStyle='#171126';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(t.x-7,y+h);ctx.lineTo(t.x+2,y+h+10);ctx.lineTo(t.x+8,y+h);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#171126';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t.text,x+w/2,y+h/2+1);ctx.restore()}
+function drawDriveBy(){const d=state.driveBy;if(!d||!d.active)return;ctx.save();ctx.translate(d.x,d.y);if(d.dir<0)ctx.scale(-1,1);
+// long black old-school sedan
+ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.ellipse(0,24,93,12,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#111827';ctx.strokeStyle='#020617';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(-92,-8,184,34,10);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-52,-8);ctx.lineTo(-30,-34);ctx.lineTo(36,-34);ctx.lineTo(61,-8);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#4b5563';ctx.beginPath();ctx.moveTo(-43,-10);ctx.lineTo(-24,-28);ctx.lineTo(0,-28);ctx.lineTo(0,-10);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(7,-28);ctx.lineTo(31,-28);ctx.lineTo(50,-10);ctx.lineTo(7,-10);ctx.closePath();ctx.fill();ctx.fillStyle='#facc15';ctx.fillRect(72,2,13,5);ctx.fillStyle='#ef4444';ctx.fillRect(-86,2,9,5);for(const wx of [-55,58]){ctx.fillStyle='#020617';ctx.beginPath();ctx.arc(wx,25,15,0,Math.PI*2);ctx.fill();ctx.fillStyle='#9ca3af';ctx.beginPath();ctx.arc(wx,25,6,0,Math.PI*2);ctx.fill()}ctx.strokeStyle='#f5c542';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,8);ctx.lineTo(15,8);ctx.stroke();
+ctx.restore();
+// Draw the speech bubble in screen coordinates so the text never mirrors with the car.
+if(d.speaking){const text='Did anyone order a pizza?',bw=244,bh=38,bx=Math.max(8,Math.min(W-bw-8,d.x-bw/2)),by=d.y-82;ctx.save();ctx.fillStyle='rgba(255,255,255,.97)';ctx.strokeStyle='#171126';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(bx,by,bw,bh,10);ctx.fill();ctx.stroke();const tailX=Math.max(bx+22,Math.min(bx+bw-22,d.x+(d.dir<0?-24:24)));ctx.beginPath();ctx.moveTo(tailX-8,by+bh);ctx.lineTo(tailX,by+bh+12);ctx.lineTo(tailX+8,by+bh);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#171126';ctx.font='900 16px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,bx+bw/2,by+bh/2+1);ctx.restore()}}
+function drawArcadeHud(){ctx.save();ctx.fillStyle='#ffd34e';ctx.font='800 21px Arial';ctx.textAlign='left';ctx.fillText('SCORE',30,38);ctx.fillText('LEVEL',205,38);ctx.fillText('LIVES',322,38);ctx.textAlign='right';ctx.fillText('HIGH SCORE',W-30,38);ctx.fillStyle='#fff';ctx.font='800 30px Arial';ctx.textAlign='left';ctx.fillText(state.score.toLocaleString(),30,70);ctx.fillText(String(state.level),205,70);ctx.fillText(String(state.lives),322,70);ctx.textAlign='right';ctx.fillText(state.highScore.toLocaleString(),W-30,70);ctx.globalAlpha=.9;ctx.fillStyle='#ffd34e';ctx.font='italic 800 25px Arial';ctx.textAlign='left';ctx.fillText('Forget about it...',38,157);ctx.fillStyle='#ff5b6e';ctx.font='italic 900 50px Arial';ctx.textAlign='right';ctx.fillText('Guido-Bambino!',W-55,150);ctx.restore()}
+function draw(){drawBackground();drawDriveBy();drawArcadeHud();const ordered=[...state.tiles].sort((a,b)=>{const pa=tilePos(a.q,a.r),pb=tilePos(b.q,b.r);return pa.y-pb.y||pa.x-pb.x});for(const t of ordered)drawTile(t);for(const e of state.enemies)drawEnemy(e);drawPlayer();drawTaunt();if(state.running&&state.paused){ctx.fillStyle='rgba(22,9,40,.64)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='700 42px Arial';ctx.textAlign='center';ctx.fillText('PAUSED',W/2,H/2)}if(state.running&&state.levelDone){ctx.fillStyle='rgba(22,9,40,.75)';ctx.fillRect(W/2-190,52,380,58);ctx.fillStyle='#fff';ctx.font='700 24px Arial';ctx.textAlign='center';ctx.fillText(`LEVEL ${state.level} COMPLETE!`,W/2,89)}}
+function loop(now){const dt=Math.min(.04,(now-last)/1000);last=now;update(dt);draw();if(state.running)raf=requestAnimationFrame(loop)}
+document.addEventListener('keydown',e=>{const map={ArrowLeft:'nw',ArrowUp:'ne',ArrowDown:'sw',ArrowRight:'se',q:'nw',Q:'nw',e:'ne',E:'ne',a:'sw',A:'sw',d:'se',D:'se',z:'sw',Z:'sw',c:'se',C:'se'};if(map[e.key]){e.preventDefault();move(map[e.key])}});document.querySelectorAll('[data-dir]').forEach(b=>b.addEventListener('pointerdown',()=>move(b.dataset.dir)));
+ui.startBtn.addEventListener('click',startGame);ui.pauseBtn.addEventListener('click',()=>{if(!state.running)return;state.paused=!state.paused;updateHud()});ui.helpBtn.addEventListener('click',()=>ui.helpBack.classList.add('show'));ui.closeHelp.addEventListener('click',()=>ui.helpBack.classList.remove('show'));ui.helpBack.addEventListener('click',e=>{if(e.target===ui.helpBack)ui.helpBack.classList.remove('show')});ui.charSize.addEventListener('input',()=>ui.charSizeVal.textContent=ui.charSize.value+'%');
+function getFaceCrop(){if(!face)return null;const img=face.img,iw=img.naturalWidth,ih=img.naturalHeight,base=Math.min(iw,ih),zoom=Math.max(1,face.zoom||1),s=base/zoom,cx=Math.max(s/2,Math.min(iw-s/2,face.cx)),cy=Math.max(s/2,Math.min(ih-s/2,face.cy));return{sx:cx-s/2,sy:cy-s/2,s,cx,cy}}
+function renderFacePreview(){ui.facePreview.innerHTML='';if(!face){ui.facePreview.innerHTML='<div class="empty-face">Default<br>Guido-Bambino</div>';return}const cv=document.createElement('canvas');cv.width=120;cv.height=120;const c=cv.getContext('2d'),crop=getFaceCrop();c.save();c.beginPath();c.arc(60,60,58,0,Math.PI*2);c.clip();c.drawImage(face.img,crop.sx,crop.sy,crop.s,crop.s,0,0,120,120);c.restore();ui.facePreview.appendChild(cv)}
+const cropCtx=ui.cropCanvas.getContext('2d');function drawCropEditor(){cropCtx.clearRect(0,0,480,480);cropCtx.fillStyle='#0f172a';cropCtx.fillRect(0,0,480,480);if(!face)return;const img=face.img,iw=img.naturalWidth,ih=img.naturalHeight,scale=Math.min(480/iw,480/ih),dw=iw*scale,dh=ih*scale,ox=(480-dw)/2,oy=(480-dh)/2;cropCtx.drawImage(img,ox,oy,dw,dh);const crop=getFaceCrop(),sx=ox+crop.sx*scale,sy=oy+crop.sy*scale,ss=crop.s*scale,cx=sx+ss/2,cy=sy+ss/2,r=ss/2;cropCtx.save();cropCtx.fillStyle='rgba(2,6,23,.58)';cropCtx.beginPath();cropCtx.rect(0,0,480,480);cropCtx.arc(cx,cy,r,0,Math.PI*2,true);cropCtx.fill('evenodd');cropCtx.restore();cropCtx.strokeStyle='#fff';cropCtx.lineWidth=4;cropCtx.beginPath();cropCtx.arc(cx,cy,r,0,Math.PI*2);cropCtx.stroke()}
+function cropPoint(ev){const rect=ui.cropCanvas.getBoundingClientRect(),px=(ev.clientX-rect.left)*480/rect.width,py=(ev.clientY-rect.top)*480/rect.height,iw=face.img.naturalWidth,ih=face.img.naturalHeight,scale=Math.min(480/iw,480/ih),ox=(480-iw*scale)/2,oy=(480-ih*scale)/2;return{x:(px-ox)/scale,y:(py-oy)/scale}}
+ui.cropCanvas.addEventListener('pointerdown',ev=>{if(!face)return;ui.cropCanvas.setPointerCapture(ev.pointerId);const p=cropPoint(ev);cropDrag={x:p.x,y:p.y,cx:face.cx,cy:face.cy}});ui.cropCanvas.addEventListener('pointermove',ev=>{if(!cropDrag||!face)return;const p=cropPoint(ev),crop=getFaceCrop(),iw=face.img.naturalWidth,ih=face.img.naturalHeight;face.cx=Math.max(crop.s/2,Math.min(iw-crop.s/2,cropDrag.cx+(p.x-cropDrag.x)));face.cy=Math.max(crop.s/2,Math.min(ih-crop.s/2,cropDrag.cy+(p.y-cropDrag.y)));drawCropEditor();renderFacePreview()});ui.cropCanvas.addEventListener('pointerup',()=>cropDrag=null);ui.cropCanvas.addEventListener('pointercancel',()=>cropDrag=null);
+ui.cropZoom.addEventListener('input',()=>{if(!face)return;face.zoom=Number(ui.cropZoom.value)/100;ui.cropZoomVal.textContent=ui.cropZoom.value+'%';drawCropEditor();renderFacePreview()});ui.cropReset.addEventListener('click',()=>{if(!face)return;face.cx=face.img.naturalWidth/2;face.cy=face.img.naturalHeight/2;face.zoom=1;ui.cropZoom.value=100;ui.cropZoomVal.textContent='100%';drawCropEditor();renderFacePreview()});ui.cropDone.addEventListener('click',()=>ui.cropBox.classList.remove('show'));
+ui.faceInput.addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(face&&face.url)URL.revokeObjectURL(face.url);const url=URL.createObjectURL(file),img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=url}).catch(()=>null);if(img.complete&&img.naturalWidth){face={url,img,cx:img.naturalWidth/2,cy:img.naturalHeight/2,zoom:1};ui.cropZoom.value=100;ui.cropZoomVal.textContent='100%';ui.cropBox.classList.add('show');drawCropEditor();renderFacePreview()}else URL.revokeObjectURL(url);e.target.value=''});
+draw();
+})();
+</script>
+</body>
+</html>
